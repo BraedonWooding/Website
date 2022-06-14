@@ -1,0 +1,13 @@
+---
+const currentYear = new Date().getFullYear();
+---
+
+<footer>
+  <section text-right pr-8>
+    <div class="container">
+      <p>&copy; {currentYear > 2022 ? '2022-' : ''}{currentYear} - Braedon Wooding.
+        <br/>
+      Made with Astro/Unocss; hosted on Netlify.</p>
+    </div>
+  </section>
+</footer>

@@ -1,0 +1,81 @@
+---
+// Component Imports
+import BaseHead from '../components/BaseHead.astro';
+import BlogHeader from '../components/BlogHeader.astro';
+import BlogPostPreview from '../components/BlogPostPreview.astro';
+import DefaultLayout from '../layouts/DefaultLayout.astro';
+import { BlogFrontMatter } from '../shared/types';
+
+// Data Fetching: List all Markdown posts in the repo.
+
+let allPosts = await Astro.glob<BlogFrontMatter>('./blog/*.md');
+allPosts = allPosts.filter(x => !x.frontmatter.draft).sort((a, b) => new Date(b.frontmatter.publishDate).valueOf() - new Date(a.frontmatter.publishDate).valueOf());
+
+const categories = allPosts.flatMap(x => x.frontmatter.categories || []);
+const technologies = allPosts.flatMap(x => x.frontmatter.technologies || []);
+const languages = allPosts.flatMap(x => x.frontmatter.languages || []);
+
+// Full Astro Component Syntax:
+// https://docs.astro.build/core-concepts/astro-components/
+---
+
+<DefaultLayout>
+	<h2 text-5xl font-900 ml-10 letter-spacing-2>Hey👋! Welcome to my website.</h2>
+	<div xl="w-100vw grid grid-cols-[3fr_2fr] gap-[8rem] mt-2">
+		<div pl-10>
+			<!-- Heading -->
+			<p text-3xl font-italic font-500>I'm a software engineer focused on fun and hard problems!</p>
+			<h3 font-normal letter-spacing-2>Popular Links:</h3>
+			<ul list-none text-2xl select-none>
+				<li>📚 <a href="/blog" color-inherit underline decoration-gray>Blog</a></li>
+				<li>🖥️ <a href="/projects" color-inherit underline decoration-gray>Projects</a></li>
+			</ul>
+			<h3 font-normal letter-spacing-2>Popular Categories:</h3>
+			<div class="flex" flex-wrap flex-row gap-2 justify-items-start>
+				{categories.map(category =>
+				<a text-center rounded-2 bg-lightblue-100 p-2 text-xl color-inherit no-underline href="/">{category}</a>
+				)
+				}
+			</div>
+			<h3 font-normal letter-spacing-2>Popular Languages:</h3>
+			<div class="flex" flex-wrap flex-row gap-2 justify-items-start>
+				{languages.map(language =>
+				<a text-center rounded-2 bg-lightblue-100 p-2 text-xl color-inherit no-underline href="/">{language}</a>
+				)
+				}
+			</div>
+			<h3 font-normal letter-spacing-2>Popular Technologies:</h3>
+			<div class="flex" flex-wrap flex-row gap-2 justify-items-start>
+				{technologies.map(technology =>
+				<a text-center rounded-2 bg-lightblue-100 p-2 text-xl color-inherit no-underline
+					href="/">{technology}</a>
+				)
+				}
+			</div>
+		</div>
+		<div m-1 text-2xl pr-10>
+			<!-- Personal stuff -->
+			<h3 font-normal letter-spacing-2>Interested In:</h3>
+			<ul>
+				<li>Compilers</li>
+				<li>Operating Systems</li>
+				<li>Networks/Infrastructure</li>
+				<li>Game Design</li>
+				<li>Clean Frontend/Backend Integration and Design</li>
+			</ul>
+			<h3 font-normal letter-spacing-2>Working On:</h3>
+			<ul>
+				<li>
+					Developer Team Lead at <a color-inherit underline decoration-gray
+						href="https://www.resonate.cx">Resonate Solutions</a>
+				</li>
+				<li>A compiler to play around with Rust.</li>
+				<li>This website! A mostly static/no-JS astro/unocss blogging platform.</li>
+			</ul>
+			<h3 font-normal letter-spacing-2>Recent Projects:</h3>
+			<ul>
+				<li>TODO... fill this out</li>
+			</ul>
+		</div>
+	</div>
+</DefaultLayout>

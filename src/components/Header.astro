@@ -1,0 +1,45 @@
+---
+const menuLinks = [
+    { title: 'Home', link: '/' },
+    { title: 'Blog', link: '/blog' },
+    { title: 'Projects', link: '/projects' },
+    { title: 'Rss', link: '/rss' }
+];
+
+const currentPage = new URL(Astro.request.url);
+---
+
+<header>
+    <ul text-right pr-16>
+        {menuLinks.map(menuLink =>
+        <li inline-block ml-6>
+            <a letter-spacing-2 relative hover="font-bold" text-xl class={menuLink.link=='/' ? currentPage.pathname=='/' && 'font-bold' :
+                currentPage.pathname.startsWith(menuLink.link) && 'font-bold' } no-underline color-inherit
+                href={menuLink.link}><span class="hover-animation">{menuLink.title}</span></a>
+        </li>)}
+    </ul>
+</header>
+<style>
+    ul:hover a:not(:hover) {
+        font-weight: 400;
+    }
+
+    a:hover .hover-animation:after {
+        transform: scaleX(1);
+        transform-origin: left;
+    }
+
+    .hover-animation:after {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        content: '';
+        transform: scaleX(0);
+        width: 100%;
+        display: block;
+        transform-origin: right;
+        height: 0.1em;
+        background: blue;
+        transition: transform 0.3s linear;
+    }
+</style>
