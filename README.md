@@ -1,5 +1,7 @@
 # My Website
 
+[braedonww.me](https://braedonww.me)
+
 [![Netlify Status](https://api.netlify.com/api/v1/badges/d3fd7591-70ae-4e18-8973-64542610c6c0/deploy-status)](https://app.netlify.com/sites/frabjous-belekoy-65b84e/deploys)
 
 > By Braedon Wooding
