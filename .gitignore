@@ -1,6 +1,8 @@
 # build output
 dist/
 
+uno.css
+
 # dependencies
 node_modules/
 

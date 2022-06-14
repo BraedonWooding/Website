@@ -1,5 +1,7 @@
 # My Website
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/d3fd7591-70ae-4e18-8973-64542610c6c0/deploy-status)](https://app.netlify.com/sites/frabjous-belekoy-65b84e/deploys)
+
 > By Braedon Wooding
 
 > Built using Astro/Unocss
@@ -16,3 +18,5 @@ All commands are run from the root of the project, from a terminal:
 | `npm run dev`     | Starts local dev server at `localhost:3000`  |
 | `npm run build`   | Build your production site to `./dist/`      |
 | `npm run preview` | Preview your build locally, before deploying |
+
+> NOTE: Due to an issue with unocss integration into astro you'll have to run `npm run unocss` to generate the unocss file for production, for dev it just has to exist but won't use it.
