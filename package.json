@@ -10,6 +10,9 @@
     "unocss": "unocss src/**/*.astro --out-file src/styles/uno.css",
     "ci-build": "run-s unocss build"
   },
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "devDependencies": {
     "@astrojs/preact": "^0.1.3",
     "@astrojs/svelte": "^0.1.4",
