@@ -1,24 +1,32 @@
 ---
 import BaseHead from '../components/BaseHead.astro';
-import BlogHeader from '../components/BlogHeader.astro';
 import BlogPost from '../components/BlogPost.astro';
+import slugify from "slugify";
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
 
 const { content } = Astro.props;
-const { title, description, publishDate, author, heroImage, permalink, alt } = content;
+const { title, subTitle, description, publishDate, author } = content;
+const permalink = `https://braedonww.me/blog/${slugify(title, {
+	strict: true,
+	lower: true,
+	trim: true
+})}`;
 ---
 
-<html lang={content.lang || 'en'}>
-	<head>
-		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prism-themes@1.9.0/themes/prism-lucario.css"/>
-		<BaseHead {title} {description} {permalink} />
-	</head>
+<html lang={content.lang || 'en' }>
 
-	<body>
-		<BlogHeader />
-		<div class="wrapper">
-			<BlogPost {title} {author} {heroImage} {publishDate} {alt}>
-				<slot />
-			</BlogPost>
-		</div>
-	</body>
+<head>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prism-themes@1.9.0/themes/prism-lucario.css" />
+	<BaseHead {title} {description} {permalink} />
+</head>
+
+<body h-100vh flex flex-col items-center m-0 overflow-x-hidden style="font-family: 'Open Sans'">
+	<Header />
+	<BlogPost {title} {author} {publishDate} {subTitle}>
+		<slot />
+	</BlogPost>
+	<Footer />
+</body>
+
 </html>

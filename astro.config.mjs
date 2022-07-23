@@ -7,18 +7,21 @@ import svelte from "@astrojs/svelte";
 export default defineConfig({
   markdown: {
     drafts: true,
+    remarkPlugins: ["remark-emoji"],
   },
-  integrations: [preact(), svelte(), {
-    name: "@astrojs/unocss",
-    hooks: {
-      "astro:config:setup": async ({ config, injectScript }) => {
-        injectScript("page", `import '/src/styles/uno.css';`);
+  integrations: [
+    preact(),
+    svelte(),
+    {
+      name: "@astrojs/unocss",
+      hooks: {
+        "astro:config:setup": async ({ config, injectScript }) => {
+          injectScript("page", `import '/src/styles/uno.css';`);
+        },
       },
     },
-  }],
+  ],
   vite: {
-    plugins: [
-      UnoCss(),
-    ],
+    plugins: [UnoCss()],
   },
 });

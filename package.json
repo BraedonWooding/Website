@@ -24,6 +24,8 @@
   },
   "dependencies": {
     "accessible-astro-components": "^1.5.4",
-    "preact": "^10.7.3"
+    "preact": "^10.7.3",
+    "remark-emoji": "^3.0.2",
+    "slugify": "^1.6.5"
   }
 }

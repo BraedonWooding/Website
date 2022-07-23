@@ -10,12 +10,12 @@ const currentPage = new URL(Astro.request.url);
 ---
 
 <header>
-    <ul text-right pr-16>
+    <ul text-right>
         {menuLinks.map(menuLink =>
         <li inline-block ml-6>
-            <a letter-spacing-2 relative hover="font-bold" text-xl class={menuLink.link=='/' ? currentPage.pathname=='/' && 'font-bold' :
-                currentPage.pathname.startsWith(menuLink.link) && 'font-bold' } no-underline color-inherit
-                href={menuLink.link}><span class="hover-animation">{menuLink.title}</span></a>
+            <a letter-spacing-2 relative hover="font-bold" text-xl class={menuLink.link=='/' ? currentPage.pathname=='/'
+                && 'font-bold' : currentPage.pathname.startsWith(menuLink.link) && 'font-bold' } no-underline
+                color-inherit href={menuLink.link}><span class="hover-animation">{menuLink.title}</span></a>
         </li>)}
     </ul>
 </header>
