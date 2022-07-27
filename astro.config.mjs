@@ -1,24 +1,29 @@
 import { defineConfig } from "astro/config";
 import preact from "@astrojs/preact";
 import UnoCss from "unocss/vite";
+import katex from "astro-katex";
 import svelte from "@astrojs/svelte";
 
 // https://astro.build/config
 export default defineConfig({
   markdown: {
     drafts: true,
+    remarkPlugins: ["remark-emoji"],
   },
-  integrations: [preact(), svelte(), {
-    name: "@astrojs/unocss",
-    hooks: {
-      "astro:config:setup": async ({ config, injectScript }) => {
-        injectScript("page", `import '/src/styles/uno.css';`);
+  integrations: [
+    preact(),
+    svelte(),
+    {
+      name: "@astrojs/unocss",
+      hooks: {
+        "astro:config:setup": async ({ config, injectScript }) => {
+          injectScript("page", `import '/src/styles/uno.css';`);
+        },
       },
     },
-  }],
+    katex(),
+  ],
   vite: {
-    plugins: [
-      UnoCss(),
-    ],
+    plugins: [UnoCss()],
   },
 });
