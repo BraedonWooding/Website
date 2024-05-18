@@ -1,7 +1,4 @@
 ---
-setup: |
-  import Layout from '../../layouts/BlogPost.astro'
-  import Expr from 'astro-katex/OnlyExpression.astro'
 title: Fast and light serializer with compression
 subTitle: Building a very fast and no memory overhead serializer with over 70% compression using database tricks
 publishDate: 2022-07-23
@@ -15,6 +12,7 @@ categories: [Serialization]
 languages: [C#,C++]
 technologies: []
 ---
+import Expr from '../../components/Expr.astro'
 
 ## Background
 
@@ -102,9 +100,9 @@ There are other benefits to this approach but those aren't focused on the serial
 
 #### Using a multi-dimensional array rather than jagged array
 
-Jagged arrays (where each array points to another array) are useful where each layer can have a different size but in our case where the layers are `[column][row][items...]` each column will have the same row count so we could setup a square-like array.  This results in it being `[column,row][items...]`, this already helps the allocations quite a bit since we don't need to allocate <Expr>M \times N</Expr> arrays we just need a single big array.  This is a further optimisation ontop of the swapping of rows/columns to remove all allocations.  We could actually store it in row major order using this trick but we want column order to optimise calculations.
+Jagged arrays (where each array points to another array) are useful where each layer can have a different size but in our case where the layers are `[column][row][items...]` each column will have the same row count so we could setup a square-like array.  This results in it being `[column,row][items...]`, this already helps the allocations quite a bit since we don't need to allocate <Expr formula="M \times N"/> arrays we just need a single big array.  This is a further optimisation ontop of the swapping of rows/columns to remove all allocations.  We could actually store it in row major order using this trick but we want column order to optimise calculations.
 
-> This doesn't suffer from the "big array" issue I discussed with respect to ZeroFormatter since where as that was storing bytes (so need an element for each byte) this is storing the measures/indexes (floats/ints) so even if we needed to store 10 million records (over 100 columns) we wouldn't hit the limit (we would be at <Expr>10,000,000 \times 100 = </Expr> 1 billion indexes where as ZeroFormatter here would be hitting 4 billion at minimum).
+> This doesn't suffer from the "big array" issue I discussed with respect to ZeroFormatter since where as that was storing bytes (so need an element for each byte) this is storing the measures/indexes (floats/ints) so even if we needed to store 10 million records (over 100 columns) we wouldn't hit the limit (we would be at <Expr formula="10,000,000 \times 100 = 1,000,000,000"/> indexes where as ZeroFormatter here would be hitting 4 billion at minimum).
 
 This isn't a large impact however, it does result in lower GC load (since you have less allocations) and should help reduce fragmentation, however there are a couple of other benefits that we could exploit in the future:
 - Caching of the underlying memory of the big array is easier to do than when it's split up into a ton of allocations.

@@ -1,10 +1,8 @@
 ---
-import { BlogFrontMatter } from "../shared/types";
+import { CollectionEntry } from "astro:content";
 
 export interface Props {
-	post: {
-		frontmatter: BlogFrontMatter
-	}
+	post: CollectionEntry<'blog'>;
 }
 
 const { post } = Astro.props;
@@ -12,17 +10,17 @@ const { post } = Astro.props;
 
 <article class="ml-10 border-b-2 pb-5">
 	<header>
-		<p class="text-[#868686]">{new Date(post.frontmatter.publishDate).toLocaleString("default", { dateStyle: "full"
+		<p class="text-[#868686]">{new Date(post.data.publishDate).toLocaleString("default", { dateStyle: "full"
 			})}
 		</p>
 		<a href={post.url}>
-			<h1>{post.frontmatter.title}</h1>
+			<h1>{post.data.title}</h1>
 		</a>
-		<h3 class="text-[#63666A]">| {post.frontmatter.subTitle}</h3>
+		<h3 class="text-[#63666A]">| {post.data.subTitle}</h3>
 
 	</header>
-	<p pl-10>{post.frontmatter.description}</p>
-	<a href={post.url}>Read more...</a>
+	<p pl-10>{post.data.description}</p>
+	<a href={'/blog/' + post.slug}>Read more...</a>
 </article>
 <style>
 	a,

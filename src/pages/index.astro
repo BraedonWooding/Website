@@ -1,16 +1,17 @@
 ---
 // Component Imports
+import { getCollection } from 'astro:content';
 import DefaultLayout from '../layouts/DefaultLayout.astro';
 import { BlogFrontMatter } from '../shared/types';
 
 // Data Fetching: List all Markdown posts in the repo.
 
-let allPosts = await Astro.glob<BlogFrontMatter>('./blog/*.md');
-allPosts = allPosts.filter(x => !x.frontmatter.draft).sort((a, b) => new Date(b.frontmatter.publishDate).valueOf() - new Date(a.frontmatter.publishDate).valueOf());
+let allPosts = await getCollection('blog');
+allPosts = allPosts.filter(x => !x.data.draft).sort((a, b) => new Date(b.data.publishDate).valueOf() - new Date(a.data.publishDate).valueOf());
 
-const categories = allPosts.flatMap(x => x.frontmatter.categories || []);
-const technologies = allPosts.flatMap(x => x.frontmatter.technologies || []);
-const languages = allPosts.flatMap(x => x.frontmatter.languages || []);
+const categories = allPosts.flatMap(x => x.data.categories || []);
+const technologies = allPosts.flatMap(x => x.data.technologies || []);
+const languages = allPosts.flatMap(x => x.data.languages || []);
 
 // Full Astro Component Syntax:
 // https://docs.astro.build/core-concepts/astro-components/

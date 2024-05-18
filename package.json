@@ -2,6 +2,7 @@
   "name": "@example/blog",
   "version": "0.0.1",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
@@ -14,20 +15,22 @@
     "node": ">=16.0.0"
   },
   "devDependencies": {
+    "@astrojs/mdx": "^3.0.0",
     "@astrojs/preact": "^0.1.3",
     "@astrojs/svelte": "^0.1.4",
-    "astro": "^1.0.0-beta.44",
+    "astro": "^4.8.6",
     "npm-run-all": "^4.1.5",
     "sass": "^1.52.3",
-    "svelte": "^3.48.0",
-    "unocss": "^0.38.2"
+    "unocss": "^0.60.2",
+    "svelte": "^3.48.0"
   },
   "dependencies": {
+    "@astrojs/sitemap": "^3.1.4",
     "accessible-astro-components": "^1.5.4",
-    "astro-katex": "^1.0.5",
     "katex": "^0.16.0",
     "preact": "^10.7.3",
     "remark-emoji": "^3.0.2",
+    "schema-dts": "^1.1.2",
     "slugify": "^1.6.5"
   }
 }

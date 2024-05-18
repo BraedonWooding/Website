@@ -1,20 +1,21 @@
 ---
 // Component Imports
+import { getCollection } from 'astro:content';
 import BlogPostPreview from '../../components/BlogPostPreview.astro';
 import DefaultLayout from '../../layouts/DefaultLayout.astro';
 import { BlogFrontMatter } from '../../shared/types';
 
 // Data Fetching: List all Markdown posts in the repo.
 
-let allPosts = await Astro.glob<BlogFrontMatter>('./*.md');
-allPosts = allPosts.filter(x => !x.frontmatter.draft).sort((a, b) => new Date(b.frontmatter.publishDate).valueOf() - new Date(a.frontmatter.publishDate).valueOf());
+let allPosts = await getCollection('blog');
+allPosts = allPosts.filter(x => !x.data.draft).sort((a, b) => new Date(b.data.publishDate).valueOf() - new Date(a.data.publishDate).valueOf());
 
-const categories = [...new Set(allPosts.flatMap(x => x.frontmatter.categories || []))];
-const technologies = [...new Set(allPosts.flatMap(x => x.frontmatter.technologies || []))];
-const languages = [...new Set(allPosts.flatMap(x => x.frontmatter.languages || []))];
+const categories = [...new Set(allPosts.flatMap(x => x.data.categories || []))];
+const technologies = [...new Set(allPosts.flatMap(x => x.data.technologies || []))];
+const languages = [...new Set(allPosts.flatMap(x => x.data.languages || []))];
 
-const years = [...new Set(allPosts.flatMap(x => new Date(x.frontmatter.publishDate).getFullYear().toString()))];
-const months = [...new Set(allPosts.flatMap(x => new Date(x.frontmatter.publishDate).toLocaleString("default", { month: "long" })))];
+const years = [...new Set(allPosts.flatMap(x => new Date(x.data.publishDate).getFullYear().toString()))];
+const months = [...new Set(allPosts.flatMap(x => new Date(x.data.publishDate).toLocaleString("default", { month: "long" })))];
 ---
 
 <DefaultLayout>
