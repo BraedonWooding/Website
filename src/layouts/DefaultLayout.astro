@@ -12,6 +12,12 @@ let permalink = 'https://braedonww.me/';
 <html lang="en" h-full>
 
 <head>
+    <link
+        rel="alternate"
+        type="application/rss+xml"
+        title="Your Site's Title"
+        href={new URL("feed.xml", Astro.site)}
+    />
 	<link rel="sitemap" href="/sitemap-index.xml" />
     <BaseHead title={title} description={description} permalink={permalink} />
 </head>

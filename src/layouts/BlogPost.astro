@@ -49,6 +49,12 @@ const jsonLd = {
 <html lang={post.data.lang || 'en' }>
 
 <head>
+  <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="Your Site's Title"
+      href={new URL("feed.xml", Astro.site)}
+  />
 	<link rel="sitemap" href="/sitemap-index.xml" />
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prism-themes@1.9.0/themes/prism-lucario.css" />
 	<script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
