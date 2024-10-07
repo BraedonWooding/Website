@@ -1,0 +1,87 @@
+{
+  "$schema": "https://frontmatter.codes/frontmatter.schema.json",
+  "frontMatter.framework.id": "astro",
+  "frontMatter.preview.host": "http://localhost:4321",
+  "frontMatter.content.publicFolder": "public",
+  "frontMatter.content.pageFolders": [
+    {
+      "title": "blog",
+      "path": "[[workspace]]/src/content/blog"
+    }
+  ],
+  "frontMatter.taxonomy.contentTypes": [
+    {
+      "name": "default",
+      "pageBundle": false,
+      "previewPath": null,
+      "fields": [
+        {
+          "title": "title",
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "title": "subTitle",
+          "name": "subTitle",
+          "type": "string"
+        },
+        {
+          "title": "publishDate",
+          "name": "publishDate",
+          "type": "datetime"
+        },
+        {
+          "title": "author",
+          "name": "author",
+          "type": "string"
+        },
+        {
+          "title": "description",
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "title": "categories",
+          "name": "categories",
+          "type": "categories"
+        },
+        {
+          "title": "languages",
+          "name": "languages",
+          "type": "taxonomy",
+          "taxonomyId": "languages"
+        },
+        {
+          "title": "technologies",
+          "name": "technologies",
+          "type": "taxonomy",
+          "taxonomyId": "technologies"
+        },
+        {
+          "title": "keywords",
+          "name": "keywords",
+          "type": "fields",
+          "fields": []
+        }
+      ]
+    }
+  ],
+  "frontMatter.taxonomy.customTaxonomy": [
+    {
+      "id": "technologies",
+      "options": [
+        "UnoCSS",
+        "Astro"
+      ]
+    },
+    {
+      "id": "languages",
+      "options": [
+        "Typescript",
+        "C#",
+        "C++",
+        "Lua"
+      ]
+    }
+  ]
+}

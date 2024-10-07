@@ -12,7 +12,6 @@ technologies:
   - Astro
   - UnoCSS
 keywords: []
-slug: hello-world
 ---
 <h4 text-center> :sparkles: My blog and portfolio platform is live! :sparkles: </h4>
 
