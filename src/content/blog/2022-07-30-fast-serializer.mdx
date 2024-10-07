@@ -1,0 +1,198 @@
+---
+title: Fast and light serializer with compression
+subTitle: Building a very fast and no memory overhead serializer with over 70% compression using database tricks
+publishDate: 2022-07-23
+author: Braedon Wooding
+description: U
+
+value: 128
+
+# Specialised fields for data
+categories: [Serialization]
+languages: [C#,C++]
+technologies: []
+---
+import Expr from '../../components/Expr.astro'
+
+## Background
+
+Recently, I've faced an annoying issue which was caused due to the need of serializing/deserializing cached data.  I looked into a series of options and found all of them lacking in some way or another.
+
+Roughly, we have a OLAP styled leaf level table that represents all the various dimensions that the customer can query by (this can easily have upwards of 50 dimensions and a dozen measures), there are many reasons why our table looks like this as opposed to a more traditional table (which may use a star schema or some sort of aggregating counter to group) but I will refrain from getting into that now (and leave it to another post in the future).
+
+![TODO IMG]()
+
+To avoid unnecessary database load we cache a representation of this table for some types of slices.  Typically, due to date filters (i.e. last 30 days) the size of these slices are relatively small sitting at around half a MB for smaller datasets up to a couple dozen MBs for larger ones (representing hundreds of thousands of records).
+
+> Our domain is in the region of a couple million records, we don't deal with "big data" so the optimisations here are focused towards that.
+
+## Starting Point/Goals
+
+The initial structure of these slices are a `int[][][]` for dimensions and measures use `double?[][][]`.  The reasoning for the triple nested array is that each column has the option of being a collection which allows it to store a comma separated list of values (i.e. the "tags" that a product may have or "sentiment themes" about some verbatim).
+
+A rare issue that we face in production (picked up in monitoring) is the cache failing to load/save data due to the current serializer (which was [ZeroFormatter](https://github.com/neuecc/ZeroFormatter)), while this wasn't critical it was still something that would be nice to fix (since if cache data fails to load it'll just fallback to loading from database, and updating cache isn't a requirement for a request to finish successfully).  The issue seems to be due to how ZeroFormatter works, it serializes to a large flattened binary array (that it resizes by doubling), the downside to this approach is that in C# the max size of an array is by default (TODO: Max Size), while you can change this using an environmental variable to (TODO: Updated Max Size) other issues may pop up (since in those cases if you are still using 32 bit ints you'll still run into issues).
+
+To me it also didn't make much sense while we would need an intermediate array to output to a stream.  So I wanted a solution that didn't require this intermediate result (both ways).  A nice to have from this "new" solution would be any sort of compression we could perform to the data, GZip wasn't worth it since it was too slow (even on the lowest option) and would require an intermediate buffer, so I would need some sort of compression that works on an individual item level rather than overall.
+
+Thus I had the following goals:
+
+- Some sort of compression, every byte we don't need to load/send speeds it up significantly.
+  - It was stored using Azure Blob Storage so loading MB files could easily take 20-50ms+ per file (and we needed upwards of 100-500 files to build some dashboards) so reducing file size could lead to significant performance gains.
+- Easy to understand protocol that doesn't require intermediate buffers and is reasonably fast.  I had a budget of a 3-5ms at most (sub 1ms was moonshot).
+- Support for various types such as ints/unsigned ints/doubles
+
+## Optimising the slice data structure
+
+Before we break into compression of the datatypes let's start with the slices themselves.  There are two major issues with the old structure.
+
+### How costly is `double?` really?
+
+A `double` is a 64 bit floating point value.  However, a `double?` is an `Optional<double>`, C# has actual value type support and Optional is a struct (looking at you Java) so there is no boxing cost here but there is actually a hidden cost to optional.  The rough structure for this type would be;
+
+```c
+struct OptionalDouble {
+  double value;
+  bool hasValue;
+};
+```
+
+Oh no!  This means that the size of this type is 9 bytes, this means that we it is put into an array it will need to add padding so it can be 8 byte aligned (need alignment for the largest member - the double).  This means that *every* `double?` is 2x as big just due to making it optional.
+
+This is a little hard to prove in C# (since there is no easy way of finding out how big something is) but we can get a pretty good estimate by tracking memory usage.
+
+```csharp
+void Main()
+{
+	long memoryBefore = GC.GetTotalMemory(true);
+	// allocate a very large array
+	double?[] array = new double?[100000];
+	long memoryAfter = GC.GetTotalMemory(true);
+	Console.WriteLine($"Before = {memoryBefore / 1024.0 / 1024}MB,\nMemory After = {memoryAfter / 1024.0 / 1024}MB,\nAverage Memory Used Per Element = {(memoryAfter - memoryBefore) / 100000.0}B");
+}
+```
+
+The output of this program is
+
+```
+Before = 1.29937744140625MB,
+Memory After = 2.8252487182617188MB,
+Average Memory Used Per Element = 15.99992B
+```
+
+Thus, I think it's pretty fair to presume that it's 16 bytes per item.
+
+> There is a bit of overhead for the array (since arrays are reference types so the length/pointer will be stored in allocated memory) and perhaps some other overhead in the system that would be responsible for the slight difference.
+
+So, we have a few options to optimise this and get rid of the extra cost.
+- Switch double for float, in quite a few cases our measures are integers (i.e. if you are measuring a 'rating' from 0-5) and even in the cases when they are floating point we don't hold higher precision than 2-3 digits anyways in our final results (do you really need all 14 digits of precision).  The downside here is that you are still paying double it's just 4 bytes -> 8 bytes rather than 8 -> 16.  We implemented this though because keeping the optional makes a lot of other code cleaner.
+- Use a sentinel value to represent nullability such as NaN.  This is about as quick to check as a boolean value for us (for our usecase optimising this would be majorly over-optimisation) and avoids the need to use an optional.  The downside is that you lose type accuracy and could potentially lead to bugs where people don't validate them correctly.  This wasn't implemented in the end because the value of the size optimisation wasn't large enough to offset the type accuracy regression.
+  - This could be implemented along with the first option (I included that in benchmarks)
+
+### Swapping columns and rows
+
+This optimisation really deserves a post entirely to itself (and lends towards SIMD/Vectorisation optimisations amongst other things), but there are 2 major ways to store arrays, row/column major order.
+
+![IMG TODO]()
+
+Originally, it was stored in row major order.  This means that when allocating our arrays of `int[][][]` we have to allocate many small arrays rather than a few large arrays.
+
+There are other benefits to this approach but those aren't focused on the serializer part of this problem.
+
+#### Using a multi-dimensional array rather than jagged array
+
+Jagged arrays (where each array points to another array) are useful where each layer can have a different size but in our case where the layers are `[column][row][items...]` each column will have the same row count so we could setup a square-like array.  This results in it being `[column,row][items...]`, this already helps the allocations quite a bit since we don't need to allocate <Expr formula="M \times N"/> arrays we just need a single big array.  This is a further optimisation ontop of the swapping of rows/columns to remove all allocations.  We could actually store it in row major order using this trick but we want column order to optimise calculations.
+
+> This doesn't suffer from the "big array" issue I discussed with respect to ZeroFormatter since where as that was storing bytes (so need an element for each byte) this is storing the measures/indexes (floats/ints) so even if we needed to store 10 million records (over 100 columns) we wouldn't hit the limit (we would be at <Expr formula="10,000,000 \times 100 = 1,000,000,000"/> indexes where as ZeroFormatter here would be hitting 4 billion at minimum).
+
+This isn't a large impact however, it does result in lower GC load (since you have less allocations) and should help reduce fragmentation, however there are a couple of other benefits that we could exploit in the future:
+- Caching of the underlying memory of the big array is easier to do than when it's split up into a ton of allocations.
+- It's faster to allocate one large array than 100 small ones (not significantly)
+
+On the performance part, it's pretty easy to run a benchmark to determine that.
+
+```csharp
+void Main()
+{
+  // If running in LinqPad you need to save the query and uncomment below
+	// Environment.CurrentDirectory = Path.GetDirectoryName(LINQPad.Util.CurrentQueryPath);
+	var summary = BenchmarkRunner.Run<Test>();
+}
+
+// This will take quite a long time, for me it took <TODO> mins and that was on a Ryzen 9 5950X
+// Removing the RowMajor test does massively speed it up since that's quite slow.
+public class Test
+{
+	[Params(10, 50, 100, 200)]
+	public int Cols { get; set; }
+	
+	[Params(1000, 10_000, 100_000, 1_000_000, 10_000_000)]
+	public int Rows { get; set; }
+
+	[Benchmark]
+	public int[][] JaggedColMajorArray()
+	{
+		int[][] array = new int[Cols][];
+		for (int i = 0; i < Cols; i++) array[i] = new int[Rows];
+		return array;
+	}
+	
+	[Benchmark]
+	public int[][] JaggedRowMajorArray()
+	{
+		int[][] array = new int[Rows][];
+		for (int i = 0; i < Rows; i++) array[i] = new int[Cols];
+		return array;
+	}
+
+	[Benchmark]
+	public int[,] MultiArray() {
+		return new int[Cols, Rows];
+	}
+}
+```
+
+> Keep in mind that this won't actually allocate any real memory close to the 3Gbs it represents, it'll all be mostly virtual memory (except the 100 items for the outer array )
+
+This takes a little while to run but produces the following graph:
+
+This isn't actually a huge performance gain for us but the reduction on GC load does improve our stability under higher level of loads and the ability to cache memory improves this even more.  The larger performance gains come from changing how calculations are run to use SIMD/Vectorisation calculations where possible, which is an entire other post.
+
+## Implementing the serializer
+
+We are a C# shop so it was important to implement it in C# but I wanted first to implement it in C++ to see just how fast I could get it.
+
+You can find the code (for both versions) here: [TODO LINK TO C++ AND C#]().
+
+We implement the following optimisations (I'll go into detail what each one is/how it was implemented)
+- Variable length integer encoding (with optional zig-zagging for possible negative integers)
+  - Roughly, conceptualise as UTF-8 encoding for integers
+- Small array optimisations
+- Various floating compression choices
+  - Entropy compression
+  - XOR compression
+  - Mask compression
+- Table compression
+
+The C++ one has all the various options implemented where as the C# one has just the ones that are beneficial to our usecase.  I'll include graphs for each one as we go and at the end I'll show some combinations.
+
+### Brief aside: the dataset/s I'm using
+
+The dataset used in these benchmarks matter at this point since most of this algorithms have more optimal conditions i.e. if you are encoding large integers (that require all 4 bytes) then variable length integer encoding would actually use 5 bytes (like how UTF-8 works) and be slower.  For the use cases I'm considering we typically have the following attributes about our data:
+- Most of our integers are small (< 256) and the ones that are large are still only sit around a couple thousand.
+- Most of our integers are non-positive and we know ahead of time which columns can be negative.
+  - This is because our dimensions are stored using an integer mapping table to compress our leaf levels even more and these mapping indexes are positive (> 0 actually).
+- We have very few 'real' floats and even when we do the precision requirement is low and our entropy is also low.  We aren't a scientific use-case where there is a lot of noise in the lower parts of the mantissa.  Often our floats are representable as exact integers.
+- Very few dimensions have more than one value and we know ahead of time which columns will contain one or many values.  When they have multiple values they consist of just 1-5 values typically.
+- Our datasets vary but often can be quite sparse and so we can have upwards of 10-15% of NULLs in our datasets.
+
+For this reason I've created a couple datasets that are specific to our use case.  This may make the results of my benchmarks inaccurate for your use case.
+- A 'typical' small/medium/large dataset which is composed of 50/100/200 dimensions, 10/20/40 measures, and 100,000/1,000,000/10,000,000 rows.  5% of the dimensions are arrays (rounding down) that have between 1-5 values (normal distribution centred on 3).  80% of non array dimensions are distributed between 1 and 150 and the remaining 15% are distributed between 1 and 10,000.  Around 20% of all values are NULL (regardless of column).  Out of the measures 80% are just integer values from -1 to 10 (distributed uniformally), 20% are randomly distributed floats between -1000 and 1000.
+  - This is actually 9 datasets since we run it for each combination of the two.  We just have 1 dataset though that we just reduce in software prior to running the benchmark.
+- A sparse dataset which is similar to above but 40% of all values are null.
+- More arrays/no array dataset that takes the two extremes, represents 80%/0% of dimensions having more than one value respectively.
+
+The datasets were prepped before (since generation of values could bias results in-between runs) and can be found here: [TODO LINK]()
+
+## Rough setup of serializer
+
+The C++ serializer is very simple, and just consists of a single makefile

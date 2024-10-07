@@ -1,4 +1,4 @@
-import { defineConfig } from 'unocss'
+import { defineConfig } from "unocss";
 
 import presetAttributify from "@unocss/preset-attributify";
 import presetUno from "@unocss/preset-uno";
@@ -17,15 +17,15 @@ export default defineConfig({
   presets: [presetAttributify(), presetUno()],
   theme: {
     colors: {
-      "secondary-dark": "#001219",
+      secondaryDark: "#001219",
       secondary: "#005f73",
-      "secondary-light": "#0a9396",
-      "secondary-highlight": "#94d2bd",
+      secondaryLight: "#0a9396",
+      secondaryHighlight: "#94d2bd",
       background: "#f8f8ff",
-      "primary-hightlight": "#ee9b00",
-      "primary-light": "#bb3e03",
+      primaryHightlight: "#ee9b00",
+      primaryLight: "#bb3e03",
       primary: "#ae2012",
-      "primary-dark": "#9b2226",
+      primaryDark: "#9b2226",
     },
   },
-})
+});
