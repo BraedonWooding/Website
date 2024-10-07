@@ -12,13 +12,14 @@ let permalink = 'https://braedonww.me/';
 <html lang="en" h-full>
 
 <head>
-	<BaseHead title={title} description={description} permalink={permalink} />
+	<link rel="sitemap" href="/sitemap-index.xml" />
+    <BaseHead title={title} description={description} permalink={permalink} />
 </head>
 
-<body h-full flex flex-col m-0 overflow-x-hidden style="font-family: 'Open Sans'">
-	<Header />
+<body h-full flex flex-col items-center m-0 overflow-x-hidden style="font-family: 'Open Sans'">
+    <Header />
     <main id="main" tabindex={-1} style="flex: 1 0 auto;">
-        <slot/>
+        <slot />
     </main>
     <Footer />
 </body>

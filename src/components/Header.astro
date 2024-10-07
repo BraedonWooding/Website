@@ -10,12 +10,14 @@ const currentPage = new URL(Astro.request.url);
 ---
 
 <header>
-    <ul text-right pr-16>
+    <a href="/"><img width="80" src="/racoon.png" class="fixed top-2 left-10" /></a>
+    <ul text-right>
         {menuLinks.map(menuLink =>
         <li inline-block ml-6>
-            <a letter-spacing-2 relative hover="font-bold" text-xl class={menuLink.link=='/' ? currentPage.pathname=='/' && 'font-bold' :
-                currentPage.pathname.startsWith(menuLink.link) && 'font-bold' } no-underline color-inherit
-                href={menuLink.link}><span class="hover-animation">{menuLink.title}</span></a>
+            <a letter-spacing-2 relative hover="font-bold" text-xl class:list={[menuLink.link=='/' ?
+                currentPage.pathname=='/' && 'font-bold' : currentPage.pathname.startsWith(menuLink.link) && 'font-bold'
+                , 'hover-animation' ] } no-underline color-inherit href={menuLink.link}><span
+                    data-text={menuLink.title}>{menuLink.title}</span></a>
         </li>)}
     </ul>
 </header>
@@ -24,9 +26,31 @@ const currentPage = new URL(Astro.request.url);
         font-weight: 400;
     }
 
-    a:hover .hover-animation:after {
+    a:hover.hover-animation:after {
         transform: scaleX(1);
         transform-origin: left;
+    }
+
+    a span {
+        display: inline-flex;
+        flex-direction: column;
+        user-select: none;
+    }
+
+    a span:after {
+        content: attr(data-text);
+        height: 0;
+        visibility: hidden;
+        overflow: hidden;
+        user-select: none;
+        pointer-events: none;
+        font-weight: bold;
+    }
+
+    @media speech {
+        a span:after {
+            display: none;
+        }
     }
 
     .hover-animation:after {
@@ -39,7 +63,7 @@ const currentPage = new URL(Astro.request.url);
         display: block;
         transform-origin: right;
         height: 0.1em;
-        background: blue;
+        background: #0a9396;
         transition: transform 0.3s linear;
     }
 </style>

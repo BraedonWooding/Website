@@ -1,0 +1,71 @@
+---
+// Component Imports
+import { getCollection } from 'astro:content';
+import BlogPostPreview from '../../components/BlogPostPreview.astro';
+import DefaultLayout from '../../layouts/DefaultLayout.astro';
+import { BlogFrontMatter } from '../../shared/types';
+
+// Data Fetching: List all Markdown posts in the repo.
+
+let allPosts = await getCollection('blog');
+allPosts = allPosts.filter(x => !x.data.draft).sort((a, b) => new Date(b.data.publishDate).valueOf() - new Date(a.data.publishDate).valueOf());
+
+const categories = [...new Set(allPosts.flatMap(x => x.data.categories || []))];
+const technologies = [...new Set(allPosts.flatMap(x => x.data.technologies || []))];
+const languages = [...new Set(allPosts.flatMap(x => x.data.languages || []))];
+
+const years = [...new Set(allPosts.flatMap(x => new Date(x.data.publishDate).getFullYear().toString()))];
+const months = [...new Set(allPosts.flatMap(x => new Date(x.data.publishDate).toLocaleString("default", { month: "long" })))];
+---
+
+<DefaultLayout>
+  <h2 text-5xl font-900 ml-10 letter-spacing-2 class="font-[Montserrat]">Blog</h2>
+  <div pl-10 flex flex-row>
+    <h3 font-normal letter-spacing-2>Topics:</h3>
+    <div class="flex" mt-auto mb-auto flex-wrap flex-row gap-2 justify-items-start ml-2>
+      {categories.map(category =>
+      <a text-center rounded-2 align-middle bg-lightblue-100 p-2 text-xl color-inherit no-underline
+        href="/">{category}</a>
+      )
+      }
+    </div>
+    <div class="border-l-2" ml-4 mr-4 mt-2 mb-2 />
+    <h3 font-normal letter-spacing-2>Languages:</h3>
+    <div class="flex h-50%" flex-wrap flex-row gap-2 justify-items-start mt-auto mb-auto ml-2>
+      {languages.map(language =>
+      <a text-center rounded-2 bg-lightblue-100 p-2 text-xl color-inherit no-underline href="/">{language}</a>
+      )
+      }
+    </div>
+    <div class="border-l-2" ml-4 mr-4 mt-2 mb-2 />
+    <h3 font-normal letter-spacing-2>Tech:</h3>
+    <div class="flex h-50%" flex-wrap flex-row gap-2 justify-items-start mt-auto mb-auto ml-2>
+      {technologies.map(technology =>
+      <a text-center rounded-2 bg-lightblue-100 p-2 text-xl color-inherit no-underline href="/">{technology}</a>
+      )
+      }
+    </div>
+  </div>
+  <div pl-10 flex flex-row>
+    <h3 font-normal letter-spacing-2>Year:</h3>
+    <div class="flex" mt-auto mb-auto flex-wrap flex-row gap-2 justify-items-start ml-2>
+      {years.map(year =>
+      <a text-center rounded-2 align-middle bg-lightblue-100 p-2 text-xl color-inherit no-underline href="/">{year}</a>
+      )
+      }
+    </div>
+    <div class="border-l-2" ml-4 mr-4 mt-2 mb-2 />
+    <h3 font-normal letter-spacing-2>Month:</h3>
+    <div class="flex h-50%" flex-wrap flex-row gap-2 justify-items-start mt-auto mb-auto ml-2>
+      {months.map(month =>
+      <a text-center rounded-2 bg-lightblue-100 p-2 text-xl color-inherit no-underline href="/">{month}</a>
+      )
+      }
+    </div>
+  </div>
+  <div flex flex-col>
+    {allPosts.map(post =>
+    <BlogPostPreview post={post}></BlogPostPreview>
+    )}
+  </div>
+</DefaultLayout>

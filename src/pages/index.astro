@@ -1,47 +1,48 @@
 ---
 // Component Imports
+import { getCollection } from 'astro:content';
 import DefaultLayout from '../layouts/DefaultLayout.astro';
 import { BlogFrontMatter } from '../shared/types';
 
 // Data Fetching: List all Markdown posts in the repo.
 
-let allPosts = await Astro.glob<BlogFrontMatter>('./blog/*.md');
-allPosts = allPosts.filter(x => !x.frontmatter.draft).sort((a, b) => new Date(b.frontmatter.publishDate).valueOf() - new Date(a.frontmatter.publishDate).valueOf());
+let allPosts = await getCollection('blog');
+allPosts = allPosts.filter(x => !x.data.draft).sort((a, b) => new Date(b.data.publishDate).valueOf() - new Date(a.data.publishDate).valueOf());
 
-const categories = allPosts.flatMap(x => x.frontmatter.categories || []);
-const technologies = allPosts.flatMap(x => x.frontmatter.technologies || []);
-const languages = allPosts.flatMap(x => x.frontmatter.languages || []);
+const categories = allPosts.flatMap(x => x.data.categories || []);
+const technologies = allPosts.flatMap(x => x.data.technologies || []);
+const languages = allPosts.flatMap(x => x.data.languages || []);
 
 // Full Astro Component Syntax:
 // https://docs.astro.build/core-concepts/astro-components/
 ---
 
 <DefaultLayout>
-	<h2 text-5xl font-900 ml-10 letter-spacing-2>Hey👋! Welcome to my website.</h2>
+	<h2 text-5xl font-900 ml-10 letter-spacing-2 class="font-[Montserrat]">Hey👋! Welcome to my website.</h2>
 	<div xl="w-100vw grid grid-cols-[3fr_2fr] gap-[8rem] mt-2">
 		<div pl-10>
 			<!-- Heading -->
 			<p text-3xl font-italic font-500>I'm a software engineer focused on fun and hard problems!</p>
-			<h3 font-normal letter-spacing-2>Popular Links:</h3>
+			<h3 font-normal letter-spacing-2>Links:</h3>
 			<ul list-none text-2xl select-none>
 				<li>📚 <a href="/blog" color-inherit underline decoration-gray>Blog</a></li>
 				<li>🖥️ <a href="/projects" color-inherit underline decoration-gray>Projects</a></li>
 			</ul>
-			<h3 font-normal letter-spacing-2>Popular Categories:</h3>
+			<h3 font-normal letter-spacing-2>Categories:</h3>
 			<div class="flex" flex-wrap flex-row gap-2 justify-items-start>
 				{categories.map(category =>
 				<a text-center rounded-2 bg-lightblue-100 p-2 text-xl color-inherit no-underline href="/">{category}</a>
 				)
 				}
 			</div>
-			<h3 font-normal letter-spacing-2>Popular Languages:</h3>
+			<h3 font-normal letter-spacing-2>Languages:</h3>
 			<div class="flex" flex-wrap flex-row gap-2 justify-items-start>
 				{languages.map(language =>
 				<a text-center rounded-2 bg-lightblue-100 p-2 text-xl color-inherit no-underline href="/">{language}</a>
 				)
 				}
 			</div>
-			<h3 font-normal letter-spacing-2>Popular Technologies:</h3>
+			<h3 font-normal letter-spacing-2>Technologies:</h3>
 			<div class="flex" flex-wrap flex-row gap-2 justify-items-start>
 				{technologies.map(technology =>
 				<a text-center rounded-2 bg-lightblue-100 p-2 text-xl color-inherit no-underline

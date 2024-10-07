@@ -1,24 +1,66 @@
 ---
 import BaseHead from '../components/BaseHead.astro';
-import BlogHeader from '../components/BlogHeader.astro';
 import BlogPost from '../components/BlogPost.astro';
+import slugify from "slugify";
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import { CollectionEntry } from 'astro:content';
+import { getArticleSchema } from '../shared/structuredData';
+import { blogWebsite } from '../shared/structuredData';
 
-const { content } = Astro.props;
-const { title, description, publishDate, author, heroImage, permalink, alt } = content;
+interface Props {
+  post: CollectionEntry<'blog'>;
+}
+
+const { post } = Astro.props;
+const permalink = `https://braedonww.me/blog/${slugify(post.data.title, {
+	strict: true,
+	lower: true,
+	trim: true
+})}`;
+
+const articleStructuredData = getArticleSchema(post);
+ 
+const breadcrumbsStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Blog',
+      item: `${import.meta.env.SITE}/blog/`,
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: post.data.title,
+      item: `${import.meta.env.SITE}/blog/${post.slug}/`,
+    },
+  ],
+};
+ 
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [articleStructuredData, breadcrumbsStructuredData, blogWebsite],
+};
 ---
 
-<html lang={content.lang || 'en'}>
-	<head>
-		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prism-themes@1.9.0/themes/prism-lucario.css"/>
-		<BaseHead {title} {description} {permalink} />
-	</head>
+<html lang={post.data.lang || 'en' }>
 
-	<body>
-		<BlogHeader />
-		<div class="wrapper">
-			<BlogPost {title} {author} {heroImage} {publishDate} {alt}>
-				<slot />
-			</BlogPost>
-		</div>
-	</body>
+<head>
+	<link rel="sitemap" href="/sitemap-index.xml" />
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prism-themes@1.9.0/themes/prism-lucario.css" />
+	<script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+	<BaseHead title={post.data.title} description={post.data.description} {permalink} />
+</head>
+
+<body h-100vh flex flex-col items-center m-0 overflow-x-hidden style="font-family: 'Open Sans'">
+	<Header />
+	<BlogPost title={post.data.title} author={post.data.author} publishDate={post.data.publishDate} subTitle={post.data.subTitle}>
+		<slot />
+	</BlogPost>
+	<Footer />
+</body>
+
 </html>
